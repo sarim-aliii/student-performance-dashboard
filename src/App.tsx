@@ -500,7 +500,7 @@ Status: ${record.marks >= 40 ? 'Pass' : 'Fail'}`;
         <div className="flex min-h-screen flex-col items-center justify-center p-4">
           <div 
             ref={loginRef}
-            className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100 opacity-0"
+            className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100"
           >
             <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <LayoutDashboard className="w-10 h-10 text-indigo-600" />
