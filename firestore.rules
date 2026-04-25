@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "sarimali8549@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['studentId', 'name', 'class', 'semester', 'subject', 'marks', 'attendance', 'uploadedAt', 'uploadedBy']) &&
+             data.studentId is string && data.studentId.size() < 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.class is string && data.class.size() < 50 &&
+             data.semester is string && data.semester.size() < 50 &&
+             data.subject is string && data.subject.size() < 100 &&
+             data.marks is number && data.marks >= 0 && data.marks <= 100 &&
+             data.attendance is number && data.attendance >= 0 && data.attendance <= 100 &&
+             data.uploadedAt is string &&
+             data.uploadedBy == request.auth.uid &&
+             (!('tags' in data) || data.tags is list);
+    }
+
+    function isValidReportConfig(data) {
+      return data.keys().hasAll(['userId', 'email', 'frequency', 'active']) &&
+             data.userId == request.auth.uid &&
+             isValidEmail(data.email) &&
+             data.frequency in ['weekly', 'monthly'] &&
+             data.active is bool &&
+             (!('lastSent' in data) || data.lastSent is string);
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role']) &&
+             isValidEmail(data.email) &&
+             data.role in ['admin', 'user'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /students/{studentDocId} {
+      allow read: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidStudent(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin()) && isValidStudent(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+    }
+
+    match /reportConfigs/{configId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidReportConfig(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidReportConfig(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) && request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+    }
+  }
+}

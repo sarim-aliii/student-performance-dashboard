@@ -1,0 +1,5 @@
+{
+  "name": "Student Performance Analytics Dashboard",
+  "description": "A full-stack cloud-based application for analyzing student marks, attendance, and trends with interactive visualizations, AI-powered insights, and automated reporting.",
+  "requestFramePermissions": []
+}

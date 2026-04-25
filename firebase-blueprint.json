@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student Record",
+      "description": "Represents a student's performance and attendance data.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Unique identifier for the student" },
+        "name": { "type": "string", "description": "Full name of the student" },
+        "class": { "type": "string", "description": "Class or grade of the student" },
+        "semester": { "type": "string", "description": "Academic semester" },
+        "subject": { "type": "string", "description": "Subject name" },
+        "marks": { "type": "number", "description": "Marks obtained in the subject" },
+        "attendance": { "type": "number", "description": "Attendance percentage" },
+        "tags": { "type": "array", "description": "Custom tags for grouping" },
+        "uploadedAt": { "type": "string", "format": "date-time", "description": "Timestamp of data upload" },
+        "uploadedBy": { "type": "string", "description": "UID of the user who uploaded the data" }
+      },
+      "required": ["studentId", "name", "class", "semester", "subject", "marks", "attendance", "uploadedAt", "uploadedBy"]
+    },
+    "ReportConfig": {
+      "title": "Report Configuration",
+      "description": "Settings for automated email reports.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the report config" },
+        "email": { "type": "string", "format": "email", "description": "Recipient email address" },
+        "frequency": { "type": "string", "description": "How often to send the report (weekly/monthly)" },
+        "lastSent": { "type": "string", "format": "date-time", "description": "When the last report was sent" },
+        "active": { "type": "boolean", "description": "Whether the report is active" }
+      },
+      "required": ["userId", "email", "frequency", "active"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "Extended user information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "description": "User role (admin/user)" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/students/{studentDocId}": {
+      "schema": "Student",
+      "description": "Collection of student performance records."
+    },
+    "/reportConfigs/{configId}": {
+      "schema": "ReportConfig",
+      "description": "Automated report configurations."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data."
+    }
+  }
+}
