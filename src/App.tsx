@@ -477,19 +477,29 @@ Status: ${record.marks >= 40 ? 'Pass' : 'Fail'}`;
   const generateAiInsights = async () => {
     if (filteredRecords.length === 0) return;
     setAiLoading(true);
+    
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      
+      // 1. Determine the context based on the current filter state
+      const classContext = filterClass === 'All' ? 'across all classes' : `specifically for Class ${filterClass}`;
+      const groupName = filterClass === 'All' ? 'All Classes' : `Class ${filterClass}`;
+
+      // 2. Inject this dynamic context into the prompt
       const model = ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Analyze this student performance data and provide 3 key insights and 2 recommendations. 
-        Data Summary:
-        - Average Marks: ${stats.avgMarks}
-        - Average Attendance: ${stats.avgAttendance}
+        contents: `Analyze this student performance data ${classContext} and provide 3 key insights and 2 actionable recommendations tailored to this specific group. 
+        
+        Data Summary (${groupName}):
+        - Target Group: ${groupName}
+        - Average Marks: ${stats.avgMarks}%
+        - Average Attendance: ${stats.avgAttendance}%
         - Top Performer: ${stats.topPerformer}
         - Subject Performance: ${JSON.stringify(subjectData)}
         
-        Format the response in clean Markdown.`
+        Please format the response in clean Markdown.`
       });
+      
       const response = await model;
       setAiInsight(response.text || "No insights generated.");
     } catch (error) {
