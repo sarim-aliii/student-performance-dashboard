@@ -10,10 +10,9 @@ RUN npm install
 # Copy the rest of the application files
 COPY . .
 
-# Build the Vite application (this will likely output to a /dist folder)
+# Build the Vite application (this will output to a /dist folder)
 RUN npm run build
 
-# --- Stage 2: Production ---
 # --- Stage 2: Production ---
 FROM node:20-alpine
 
@@ -28,6 +27,10 @@ RUN npm install --omit=dev
 # Copy the built assets and server file
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./
+
+# Copy the Firebase configuration files required by the server
+COPY --from=builder /app/firebaseConfig.ts ./
+COPY --from=builder /app/firebase-blueprint.json ./
 
 EXPOSE 3000
 
