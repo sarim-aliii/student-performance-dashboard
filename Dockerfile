@@ -1,37 +1,19 @@
-# --- Stage 1: Build ---
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-# Copy package management files first for better caching
-COPY package*.json ./
-RUN npm install
-
-# Copy the rest of the application files
-COPY . .
-
-# Build the Vite application (this will output to a /dist folder)
-RUN npm run build
-
-# --- Stage 2: Production ---
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install ALL dependencies (including Vite)
 COPY package*.json ./
+RUN npm install
 
-# Install ONLY production dependencies (skips massive packages like Vite and TypeScript)
-RUN npm install --omit=dev
+# Copy the rest of your application code
+COPY . .
 
-# Copy the built assets and server file
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server.ts ./
-
-# Copy the Firebase configuration files required by the server
-COPY --from=builder /app/firebaseConfig.ts ./
-COPY --from=builder /app/firebase-blueprint.json ./
-
+# Expose the port
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# THE MAGIC FIX: 
+# We move the build command to the startup script. 
+# When Render runs this CMD, it has already injected your Environment Variables.
+# Vite will now build with your actual Firebase keys, and then instantly start the server!
+CMD ["sh", "-c", "npm run build && npm run start"]
