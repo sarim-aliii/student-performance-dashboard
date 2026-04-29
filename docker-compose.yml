@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build: .
+    container_name: student-performance-dashboard
+    ports:
+      # Map host port : container port
+      # Adjust the right-side port to match the EXPOSE port in your Dockerfile
+      - "3000:3000" 
+    env_file:
+      - .env
+    restart: unless-stopped
